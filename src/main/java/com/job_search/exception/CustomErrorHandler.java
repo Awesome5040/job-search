@@ -1,22 +1,39 @@
 package com.job_search.exception;
 
-
-import org.hibernate.exception.ConstraintViolationException;
+import net.minidev.json.JSONObject;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.ServletWebRequest;
 
+import javax.persistence.EntityNotFoundException;
+import javax.validation.ConstraintViolationException;
 
-
-import java.io.IOException;
 
 @ControllerAdvice
 public class CustomErrorHandler {
 
+    private static final String MESSAGE = "message";
+
     @ExceptionHandler(ConstraintViolationException.class)
-    public void handleConstraintViolationException(ConstraintViolationException exception,
-                                                   ServletWebRequest webRequest) throws IOException {
-        webRequest.getResponse().sendError(HttpStatus.BAD_REQUEST.value(), exception.getMessage());
+    public ResponseEntity<String> handleConstraintViolationException(final ConstraintViolationException exception) {
+        JSONObject response = new JSONObject();
+        response.put(MESSAGE, exception.getMessage());
+        return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(DuplicateRecordException.class)
+    public ResponseEntity<Object> handleDuplicateRecordException(final DuplicateRecordException exception) {
+        JSONObject response = new JSONObject();
+        response.put(MESSAGE, exception.getMessage());
+        return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Object> handleDuplicateRecordException(final EntityNotFoundException exception) {
+        JSONObject response = new JSONObject();
+        response.put(MESSAGE, exception.getMessage());
+        return new ResponseEntity<>(response.toString(), HttpStatus.NOT_FOUND);
+    }
+
 }

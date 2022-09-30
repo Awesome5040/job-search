@@ -8,6 +8,7 @@ import com.job_search.repository.entity.Vacancy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
 @Service
@@ -22,10 +23,11 @@ public class VacancyService {
     @Autowired
     private CompanyRepository companyRepository;
 
-    public void createVacancy(final VacancyDto vacancyDto, final String companyName) {
+    public VacancyDto createVacancy(final VacancyDto vacancyDto, final String companyName) {
         Vacancy vacancy = vacancyMapper.toVacancy(vacancyDto);
         vacancy.setCompany(companyRepository.findByName(companyName));
         vacancyRepository.save(vacancy);
+        return vacancyMapper.toVacancyDto(vacancy);
     }
 
     public List<VacancyDto> getAllVacanciesByCompanyId(final Long companyId) {
@@ -44,11 +46,12 @@ public class VacancyService {
         return vacancyRepository.existsById(id);
     }
 
-    public void updateVacancyById(final long id, final VacancyDto vacancyDto) {
-        Vacancy vacancy = vacancyRepository.findById(id).orElseThrow(() -> new RuntimeException("No data"));
+    public VacancyDto updateVacancyById(final long id, final VacancyDto vacancyDto) {
+        Vacancy vacancy = vacancyRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Vacancy not found"));
         vacancy.setDescription(vacancyDto.getDescription());
         vacancy.setOpen(vacancyDto.isOpen());
         vacancy.setTitle(vacancyDto.getTitle());
         vacancyRepository.save(vacancy);
+        return vacancyMapper.toVacancyDto(vacancy);
     }
 }

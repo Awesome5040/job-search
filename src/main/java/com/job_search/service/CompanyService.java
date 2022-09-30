@@ -19,8 +19,8 @@ public class CompanyService {
     private CompanyMapper companyMapper;
 
     public CompanyDto createCompany(final CompanyDto companyDto) {
-        companyRepository.save(companyMapper.toCompany(companyDto));
-        return companyDto;
+        Company company = companyRepository.save(companyMapper.toCompany(companyDto));
+        return companyMapper.toCompanyDto(company);
     }
 
     public boolean existsByName(final String value) {
@@ -43,13 +43,14 @@ public class CompanyService {
         companyRepository.deleteByName(name);
     }
 
-    public void updateCompanyByName(final String name, final CompanyDto companyDto) {
+    public CompanyDto updateCompanyByName(final String name, final CompanyDto companyDto) {
         Company company = companyRepository.findByName(name);
         company.setName(companyDto.getName());
         company.setWebsite(companyDto.getWebsite());
         company.setDescription(companyDto.getDescription());
         company.setWorkFromHome(companyDto.isWorkFromHome());
         companyRepository.save(company);
+        return companyMapper.toCompanyDto(company);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.job_search.controller;
 
 import com.job_search.controller.dto.CompanyDto;
+import com.job_search.exception.DuplicateRecordException;
 import com.job_search.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -28,48 +30,34 @@ public class CompanyController {
     private CompanyService companyService;
 
     @GetMapping
-    public List<CompanyDto> getAllCompanies() {
-        return companyService.getAllCompanies();
+    public ResponseEntity<List<CompanyDto>> getAllCompanies() {
+        return new ResponseEntity<>(companyService.getAllCompanies(), HttpStatus.OK);
     }
 
     @GetMapping("/company")
-    public CompanyDto getCompanyByName(@RequestParam String name) {
-        return companyService.getCompanyByName(name);
+    public ResponseEntity<CompanyDto> getCompanyByName(@RequestParam String name) {
+        return new ResponseEntity<>(companyService.getCompanyByName(name), HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity createCompany(@RequestBody CompanyDto companyDto) {
+    public ResponseEntity<CompanyDto> createCompany(@RequestBody CompanyDto companyDto) {
         if (companyService.existsByName(companyDto.getName()))
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(format("The '%s' company already exist", companyDto.getName()));
-        companyService.createCompany(companyDto);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(format("The '%s' company was created", companyDto.getName()));
+            throw new DuplicateRecordException(format("The '%s' company already exist", companyDto.getName()));
+        return new ResponseEntity<>(companyService.createCompany(companyDto), HttpStatus.OK);
     }
 
     @DeleteMapping("/company/{name}")
-    public ResponseEntity deleteCompany(@PathVariable("name") String name) {
+    public ResponseEntity<HttpStatus> deleteCompany(@PathVariable("name") String name) {
         if (!companyService.existsByName(name))
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(format("The '%s' company has not yet been created", name));
+            throw new EntityNotFoundException(format("The '%s' company not found", name));
         companyService.removeCompany(name);
-        return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
-                .body(format("The '%s' company was deleted", name));
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping("/company/{name}")
-    public ResponseEntity updateCompany(@PathVariable("name") String name, @RequestBody CompanyDto companyDto) {
+    public ResponseEntity<CompanyDto> updateCompany(@PathVariable("name") String name, @RequestBody CompanyDto companyDto) {
         if (!companyService.existsByName(name))
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(format("The '%s' company has not yet been created", name));
-        companyService.updateCompanyByName(name, companyDto);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body("The company was updated");
+            throw new EntityNotFoundException(format("The '%s' company not found", name));
+        return new ResponseEntity<>(companyService.updateCompanyByName(name, companyDto), HttpStatus.OK);
     }
 }

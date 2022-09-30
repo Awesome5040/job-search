@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotBlank;
 
 @Entity
 @Getter
@@ -17,7 +18,9 @@ public class Vacancy {
     @Id
     @GeneratedValue
     private Long id;
+    @NotBlank(message = "Vacancy title is mandatory")
     private String title;
+    @NotBlank(message = "Vacancy description is mandatory")
     private String description;
     private boolean isOpen;
     @ManyToOne(fetch = FetchType.LAZY)
