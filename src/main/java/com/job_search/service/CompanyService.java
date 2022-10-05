@@ -49,6 +49,7 @@ public class CompanyService {
         company.setWebsite(companyDto.getWebsite());
         company.setDescription(companyDto.getDescription());
         company.setWorkFromHome(companyDto.isWorkFromHome());
+        company.setFounded(companyDto.getFounded());
         companyRepository.save(company);
         return companyMapper.toCompanyDto(company);
     }

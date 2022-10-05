@@ -12,6 +12,7 @@ public interface CompanyMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "vacancyList", ignore = true)
+    @Mapping(target = "isWorkFromHome", source = "workFromHome")
     Company toCompany(final CompanyDto companyDto);
 
     CompanyDto toCompanyDto(final Company company);
