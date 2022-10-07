@@ -1,6 +1,9 @@
 package com.job_search.repository.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.Entity;
@@ -14,6 +17,9 @@ import javax.validation.constraints.NotBlank;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Vacancy {
     @Id
     @GeneratedValue

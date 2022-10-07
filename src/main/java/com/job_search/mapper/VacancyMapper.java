@@ -12,6 +12,7 @@ public interface VacancyMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "company", ignore = true)
+    @Mapping(target = "isOpen", source = "open")
     Vacancy toVacancy(final VacancyDto vacancyDto);
 
     List<VacancyDto> toVacancies(final Iterable<Vacancy> companies);
