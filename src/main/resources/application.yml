@@ -3,11 +3,11 @@ profile: ${spring.profiles.active}
 spring:
   datasource:
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://localhost;databaseName=mssql-db;encrypt=true;trustServerCertificate=true
-    username: user
+    url: jdbc:sqlserver://localhost:1432;databaseName=master;encrypt=true;trustServerCertificate=true
+    username: sa
     password: qwerty123#
   jpa:
     generate-ddl: true
     hibernate:
       ddl-auto: update
-      dialect: org.hibernate.dialect.MySQL8Dialect
+      dialect: org.hibernate.dialect.SQLServerDialect
