@@ -1,0 +1,29 @@
+version: "3"
+services:
+  springboot-app:
+    restart: always
+    image: job-search
+    ports:
+      - 8081:8080
+    build:
+      context: "./"
+      dockerfile: "Dockerfile"
+    environment:
+      spring.datasource.url  : "jdbc:sqlserver://sql-server:1433;databaseName=master;encrypt=true;trustServerCertificate=true"
+    depends_on:
+      - sqlserver
+
+  sqlserver:
+    container_name: sql-server
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - 1432:1433
+    volumes:
+      - sqlvolume:/var/opt/mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: qwerty123#
+      MSSQL_PID: Express
+
+volumes:
+  sqlvolume:
