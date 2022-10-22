@@ -1,13 +1,26 @@
-profile: ${spring.profiles.active}
-
 spring:
-  datasource:
-    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://localhost:1432;databaseName=master;encrypt=true;trustServerCertificate=true
-    username: sa
-    password: qwerty123#
   jpa:
     generate-ddl: true
     hibernate:
       ddl-auto: update
-      dialect: org.hibernate.dialect.SQLServerDialect
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:sqlserver://localhost:1432;databaseName=master;encrypt=true;trustServerCertificate=true
+    username: sa
+    password: qwerty123#
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://prod-db.c2e79pjftzac.us-east-1.rds.amazonaws.com:3306/sys
+    username: admin
