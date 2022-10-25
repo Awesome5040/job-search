@@ -20,6 +20,26 @@ spring:
 spring:
   config:
     activate:
+      on-profile: s3
+  datasource:
+    url: jdbc:mysql://devs3-db.c2e79pjftzac.us-east-1.rds.amazonaws.com:3306/sys
+    username: admin
+server:
+  port : 8081
+aws:
+  credentials:
+    access:
+      key:
+        id: AKIA4K252O3QAU56NTN4
+  s3:
+    region: us-east-1
+    bucket: my-test-s3-bucket-123456
+
+---
+
+spring:
+  config:
+    activate:
       on-profile: prod
   datasource:
     url: jdbc:mysql://prod-db.c2e79pjftzac.us-east-1.rds.amazonaws.com:3306/sys
