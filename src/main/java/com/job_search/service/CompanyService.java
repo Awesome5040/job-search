@@ -13,7 +13,7 @@ import java.util.List;
 public class CompanyService {
 
     @Autowired
-    private CompanyRepository companyRepository;
+    protected CompanyRepository companyRepository;
 
     @Autowired
     private CompanyMapper companyMapper;
