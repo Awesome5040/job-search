@@ -7,6 +7,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                script {
+                    properties([pipelineTriggers([[$class:"GitHubPushTrigger"]])])
+                }
                 git branch: "main", url: 'git@github.com:Awesome5040/job-search.git', credentialsId: 'app-creds'
                 sh 'chmod +x gradlew'
             }
