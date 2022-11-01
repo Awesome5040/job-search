@@ -59,6 +59,7 @@ public class S3CompanyService extends CompanyService {
         }
         logo.setFileName(fileName);
         logoRepository.save(logo);
+        //
         return "File uploaded: " + fileName;
     }
 }
