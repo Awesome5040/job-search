@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @Profile("s3")
@@ -36,7 +37,7 @@ public class S3CompanyService extends CompanyService {
                 .getObjectSummaries()
                 .stream()
                 .map(S3ObjectSummary::getKey)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public S3Object getS3File(final String companyName) {
