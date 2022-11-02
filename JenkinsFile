@@ -2,6 +2,8 @@ pipeline {
     agent any
     environment {
         CREDS_DB = credentials('DATABASE_PASS')
+        APPLICATION_NAME = 'job-search.jar'
+        WEB_SERVER_PRIVATE_API = '172.31.88.196'
     }
 
     stages {
@@ -14,6 +16,7 @@ pipeline {
                 sh 'chmod +x gradlew'
             }
         }
+
         stage('Unit tests') {
             steps {
                 sh './gradlew test --tests "*UnitTest" --info'
@@ -21,6 +24,7 @@ pipeline {
                              keepAll  : true])
             }
         }
+
         stage('Integration tests') {
             steps {
                 sh './gradlew test --tests "*IntegrationTest" --info'
@@ -28,17 +32,19 @@ pipeline {
                              keepAll  : true])
             }
         }
+
         stage('Build jar') {
             steps {
                 sh './gradlew bootjar'
             }
         }
+
         stage('Deploy jar to remote ec2') {
             steps {
                 sshPublisher(
                         continueOnError: false,
                         failOnError: true,
-                        publishers: [sshPublisherDesc(configName: "stage", transfers: [sshTransfer(sourceFiles: 'job-search.jar')], verbose: true)])
+                        publishers: [sshPublisherDesc(configName: "stage", transfers: [sshTransfer(sourceFiles: "${APPLICATION_NAME}")], verbose: true)])
             }
         }
 
@@ -46,7 +52,7 @@ pipeline {
             steps {
                 script {
                     sshagent(credentials: ['ec2']) {
-                        sh 'ssh -o "StrictHostKeyChecking=no" -l ec2-user 172.31.88.196 "sudo fuser -k 8080/tcp || true"'
+                        sh 'ssh -o "StrictHostKeyChecking=no" -l ec2-user "${WEB_SERVER_PRIVATE_API}" "sudo fuser -k 8080/tcp || true"'
                     }
                 }
             }
@@ -56,23 +62,27 @@ pipeline {
             steps {
                 script {
                     sshagent(credentials: ['ec2']) {
-                        sh 'ssh -o "StrictHostKeyChecking=no" -l ec2-user 172.31.88.196 "nohup java -jar -Dspring.profiles.active=prod -Dspring.datasource.password=${CREDS_DB_PSW} job-search.jar > output.log &"'
+                        sh 'ssh -o "StrictHostKeyChecking=no" -l ec2-user "${WEB_SERVER_PRIVATE_API}" "nohup java -jar -Dspring.profiles.active=prod -Dspring.datasource.password=${CREDS_DB_PSW} "${APPLICATION_NAME}" > output.log &"'
                     }
-                }
-                timeout(3) {
-                    waitUntil {
-                        script {
-                            try {
-                                def response = httpRequest 'http://ec2-18-212-196-212.compute-1.amazonaws.com:8080/'
-                                return (response.status == 200)
-                            }
-                            catch (exception) {
-                                return false
-                            }
-                        }
-                    }
+                waitUntilApplicationWillStart()
                 }
             }
         }
     }
+}
+
+void waitUntilApplicationWillStart() {
+    timeout(3) {
+                 waitUntil {
+                            script {
+                                try {
+                                    def response = httpRequest 'http://ec2-18-212-196-212.compute-1.amazonaws.com:8080/'
+                                    return (response.status == 200)
+                                }
+                                catch (exception) {
+                                    return false
+                                }
+                            }
+                        }
+                }
 }
