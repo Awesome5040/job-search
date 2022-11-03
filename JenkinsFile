@@ -18,16 +18,16 @@ pipeline {
         }
 
         stage('SonarQube analysis') {
-                steps {
+            steps {
                  withSonarQubeEnv('sonarqube') {
                     sh './gradlew -Dsonar.projectKey=JobSearch -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java sonarqube'
                 }
-             }
+            }
         }
 
         stage('Quality gate') {
            steps {
-                  waitForQualityGate abortPipeline: true
+                 waitForQualityGate abortPipeline: true
                  }
            }
 
