@@ -1,0 +1,102 @@
+pipeline {
+    agent any
+    environment {
+        CREDS_DB = credentials('DATABASE_PASS')
+        APPLICATION_NAME = 'job-search.jar'
+        WEB_SERVER_PRIVATE_API = '172.31.88.196'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    properties([pipelineTriggers([[$class:"GitHubPushTrigger"]])])
+                }
+                git branch: "main", url: 'git@github.com:Awesome5040/job-search.git', credentialsId: 'app-creds'
+                sh 'chmod +x gradlew'
+            }
+        }
+
+        stage('Unit tests') {
+            steps {
+                sh './gradlew test --tests "*UnitTest" --info'
+                publishHTML([reportDir: 'build/reports/tests/test', reportFiles: 'index.html', reportName: 'Integration tests Report', allowMissing: false, alwaysLinkToLastBuild: false,
+                             keepAll  : true])
+            }
+        }
+
+        stage('Integration tests') {
+            steps {
+                sh './gradlew test --tests "*IntegrationTest" --info'
+                publishHTML([reportDir: 'build/reports/tests/test', reportFiles: 'index.html', reportName: 'Integration tests Report', allowMissing: false, alwaysLinkToLastBuild: false,
+                             keepAll  : true])
+            }
+        }
+
+        stage('SonarQube analysis') {
+            steps {
+                 withSonarQubeEnv('sonarqube') {
+                    sh './gradlew -Dsonar.projectKey=JobSearch -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java jacocoTestReport sonarqube'
+                 }
+            }
+        }
+
+        stage('Quality gate') {
+             steps {
+                 waitForQualityGate abortPipeline: true
+                 }
+            }
+
+        stage('Build jar') {
+            steps {
+                sh './gradlew bootjar'
+            }
+        }
+
+        stage('Deploy jar to remote ec2') {
+            steps {
+                sshPublisher(
+                        continueOnError: false,
+                        failOnError: true,
+                        publishers: [sshPublisherDesc(configName: "stage", transfers: [sshTransfer(sourceFiles: "${APPLICATION_NAME}")], verbose: true)])
+            }
+        }
+
+        stage('Stop application') {
+            steps {
+                script {
+                    sshagent(credentials: ['ec2']) {
+                        sh 'ssh -o "StrictHostKeyChecking=no" -l ec2-user "${WEB_SERVER_PRIVATE_API}" "sudo fuser -k 8080/tcp || true"'
+                    }
+                }
+            }
+        }
+
+        stage('Run application') {
+            steps {
+                script {
+                    sshagent(credentials: ['ec2']) {
+                        sh 'ssh -o "StrictHostKeyChecking=no" -l ec2-user "${WEB_SERVER_PRIVATE_API}" "nohup java -jar -Dspring.profiles.active=prod -Dspring.datasource.password=${CREDS_DB_PSW} "${APPLICATION_NAME}" > output.log &"'
+                    }
+                waitUntilApplicationWillStart()
+                }
+            }
+        }
+    }
+}
+
+void waitUntilApplicationWillStart() {
+    timeout(3) {
+                 waitUntil {
+                            script {
+                                try {
+                                    def response = httpRequest 'http://ec2-18-212-196-212.compute-1.amazonaws.com:8080/'
+                                    return (response.status == 200)
+                                }
+                                catch (exception) {
+                                    return false
+                                }
+                            }
+                        }
+                }
+}
